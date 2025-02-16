@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            margin: 8px 0 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Log Activity</h1>
+        <form id="activityForm">
+            <label for="activity">Activity:</label>
+            <input type="text" id="activity" name="activity" required><br>
+
+            <label for="duration">Duration:</label>
+            <select id="duration" name="duration" required>
+                <option value="15 minutes">15 minutes</option>
+                <option value="30 minutes">30 minutes</option>
+                <option value="45 minutes">45 minutes</option>
+                <option value="1 hour">1 hour</option>
+                <option value="1.5 hours">1.5 hours</option>
+                <option value="2 hours">2 hours</option>
+            </select><br>
+
+            <label for="intensity">Intensity:</label>
+            <select id="intensity" name="intensity" required>
+                <option value="Light">Light</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Vigorous">Vigorous</option>
+            </select><br>
+
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+
+    <div id="sheetData" class="container">
+        <h2>Activity Data</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Activity</th>
+                    <th>Date</th>
+                    <th>Duration</th>
+                    <th>Intensity</th>
+                </tr>
+            </thead>
+            <tbody id="dataBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('activityForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const activity = document.getElementById('activity').value;
+            const duration = document.getElementById('duration').value;
+            const intensity = document.getElementById('intensity').value;
+            const date = new Date().toLocaleDateString('en-GB'); // Format: dd/mm/yyyy
+
+            const data = {
+                "Activity": activity,
+                "Date": date,
+                "Hours /minutes": duration,
+                "Light/Moderate/Vigorous": intensity
+            };
+
+            fetch('https://sheetdb.io/api/v1/ny9qnktlmrvpy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(json => {
+                console.log(json);
+                loadSheetData();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function loadSheetData() {
+            fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc_8OoJP35MEP5tXLf3ijlcNJ-MQeOdRuWfPhD3Wdz24FEQ9V_TZAIuH2l6dP4yua69uAnm3VEFXIA/pub?output=csv')
+            .then(response => response.text())
+            .then(csvText => {
+                const rows = csvText.split('\n');
+                const dataBody = document.getElementById('dataBody');
+                dataBody.innerHTML = ''; // Clear existing rows
+
+                rows.forEach((row, index) => {
+                    if (index === 0) return; // Skip the header row
+
+                    const cols = row.split(',');
+                    const tr = document.createElement('tr');
+                    
+                    cols.forEach(col => {
+                        const td = document.createElement('td');
+                        td.textContent = col;
+                        tr.appendChild(td);
+                    });
+
+                    dataBody.appendChild(tr);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        loadSheetData(); // Load data when page loads
+    </script>
+</body>
+</html>
