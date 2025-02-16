@@ -51,10 +51,15 @@
         input[type="submit"]:hover {
             background-color: #45a049;
         }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            white-space: nowrap; /* Prevent word wrapping */
         }
         th, td {
             border: 1px solid #ddd;
@@ -97,17 +102,19 @@
 
     <div id="sheetData" class="container">
         <h2>Activity Data</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Activity</th>
-                    <th>Date</th>
-                    <th>Duration</th>
-                    <th>Intensity</th>
-                </tr>
-            </thead>
-            <tbody id="dataBody"></tbody>
-        </table>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Activity</th>
+                        <th>Date</th>
+                        <th>Duration</th>
+                        <th>Intensity</th>
+                    </tr>
+                </thead>
+                <tbody id="dataBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -126,7 +133,19 @@
                 "Light/Moderate/Vigorous": intensity
             };
 
-            fetch('https://sheetdb.io/api/v1/ny9qnktlmrvpy', {
+            console.log("Data to be sent:", data);
+
+            const month = new Date().toLocaleString('default', { month: 'short' });
+            const monthMap = {
+                "Feb": "Feb",
+                "Mar": "March",
+                "Apr": "April",
+                "May": "May",
+                "Jun": "June"
+            };
+            const apiUrl = `https://sheetdb.io/api/v1/ny9qnktlmrvpy?sheet=${monthMap[month]}`;
+
+            fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -135,14 +154,25 @@
             })
             .then(response => response.json())
             .then(json => {
-                console.log(json);
+                console.log("Response from API:", json);
                 loadSheetData();
             })
             .catch(error => console.error('Error:', error));
         });
 
         function loadSheetData() {
-            fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vTc_8OoJP35MEP5tXLf3ijlcNJ-MQeOdRuWfPhD3Wdz24FEQ9V_TZAIuH2l6dP4yua69uAnm3VEFXIA/pub?output=csv')
+            const date = new Date();
+            const month = date.toLocaleString('default', { month: 'short' });
+            const monthMap = {
+                "Feb": "Feb",
+                "Mar": "March",
+                "Apr": "April",
+                "May": "May",
+                "Jun": "June"
+            };
+            const sheetUrl = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTc_8OoJP35MEP5tXLf3ijlcNJ-MQeOdRuWfPhD3Wdz24FEQ9V_TZAIuH2l6dP4yua69uAnm3VEFXIA/pub?output=csv&sheet=${monthMap[month]}`;
+
+            fetch(sheetUrl)
             .then(response => response.text())
             .then(csvText => {
                 const rows = csvText.split('\n');
@@ -171,3 +201,4 @@
     </script>
 </body>
 </html>
+-
